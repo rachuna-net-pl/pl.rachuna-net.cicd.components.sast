@@ -1,0 +1,56 @@
+---
+spec:
+  inputs:
+    stage:
+      default: sast
+      description: "The stage of the pipeline"
+    docker_image:
+      default: "registry.gitlab.com/pl.rachuna-net/containers/trivy:1.0.0-f348638e"
+      description: "The docker image to use for the sonar-scanner"
+    trivy_source_path:
+      default: "."
+      description: "The path to the source code to scan"
+---
+include:
+  - local: /source/logo.yml
+  - local: /source/trivy_init.yml
+
+.trivy:base:config:
+  stage: $[[ inputs.stage ]]
+  image: $[[ inputs.docker_image ]]
+  variables:
+    STAGE: $[[ inputs.stage ]]
+    DOCKER_IMAGE: $[[ inputs.docker_image ]]
+    TRIVY_SOURCE_PATH: $[[ inputs.trivy_source_path ]]
+    DOCKER_HOST: tcp://localhost:2375
+    DOCKER_DRIVER: overlay2
+    # See https://github.com/docker-library/docker/pull/166
+    DOCKER_TLS_CERTDIR: ""
+    IMAGE: trivy-ci-test:$CI_COMMIT_SHA
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_CACHE_DIR: ".trivycache/"
+  before_script:
+    - !reference [.logo]
+    - git config --global --add safe.directory ${CI_PROJECT_DIR}
+    - !reference [.trivy_init]
+    - curl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/gitlab.tpl -o ${CI_PROJECT_DIR}/gitlab.tpl
+    - curl https://raw.githubusercontent.com/aquasecurity/trivy/refs/heads/main/contrib/gitlab-codequality.tpl -o ${CI_PROJECT_DIR}/gitlab-codequality.tpl
+  script:
+    # Build image
+    - docker build -t $IMAGE .
+    # Build report
+    - trivy image --exit-code 0 --format template --template "${CI_PROJECT_DIR}/gitlab.tpl" -o gl-container-scanning-report.json $IMAGE
+    # Print report
+    - trivy image --exit-code 0 --severity HIGH $IMAGE
+    # Fail on severe vulnerabilities
+    - trivy image --exit-code 1 --severity CRITICAL $IMAGE
+    - trivy config --format sarif --output trivy-config.sarif ${TRIVY_SOURCE_PATH}
+  artifacts:
+    reports:
+      sast: trivy-config.sarif
+    paths:
+      - trivy-config.sarif
+
+
+💪 trivy config:
+  extends: ['.trivy:base:config']
