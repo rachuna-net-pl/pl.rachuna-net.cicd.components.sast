@@ -17,7 +17,7 @@ include:
 - local: .gitlab/stages.yml
 - local: .gitlab/workflow.yml
 - component: $CI_SERVER_FQDN/pl.rachuna-net/cicd/components/versioning/versioning@main
-- component: $CI_SERVER_FQDN/$CI_PROJECT_PATH/sonarqube@$CI_COMMIT_SHA
+- component: $CI_SERVER_FQDN/pl.rachuna-net/cicd/components/sast/sonarqube@$COMPONENT_VERSION_SAST
   inputs:
     docker_image: "registry.gitlab.com/pl.rachuna-net/containers/sonar-scanner:1.0.0"
     sonar_host_url: "${SONAR_HOST_URL}"
