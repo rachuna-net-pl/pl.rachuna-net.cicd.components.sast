@@ -1,5 +1,5 @@
 ::include{file=.gitlab/badges.md}
-# ![](https://gitlab.com/pl.rachuna-net/infrastructure/terraform/modules/gitlab-project/-/raw/main/images/sonarqube.png){height=20px} Sast
+# ![](https://gitlab.com/pl.rachuna-net/infrastructure/terraform/iac-gitlab/-/raw/main/images/project/sonarqube.png){height=20px} Sast
 
 Komponent **CI/CD katalogu** odpowiada za uruchamianie statycznego skanowania kodu przez SonarQube
 
